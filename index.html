@@ -1,53 +1,530 @@
 <!doctype html>
+<!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="author" content="Kemal Erdem">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="author" content="Piotr Mazurek">
 
-  <title>WRM Temporal Network</title>
+    <title>NF Nets</title>
 
-  <link rel="stylesheet" href="dist/reset.css">
-  <link rel="stylesheet" href="dist/reveal.css">
-  <link rel="stylesheet" href="dist/theme/black.css" id="theme">
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/custom.css">
+    <link rel="stylesheet" href="dist/theme/sky.css" id="theme">
 
-  <!-- Theme used for syntax highlighting of code -->
-  <link rel="stylesheet" href="css/highlight/isbl-editor-light.css">
+    <!-- Theme used for syntax highlighting of code -->
+    <!--    <link rel="stylesheet" href="css/highlight/isbl-editor-light.css">-->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
+
 </head>
 <body>
 <div class="reveal">
-  <div class="slides">
-    <section>
-      <h2>Presentation</h2>
-      <small>Authors...</small>
-    </section>
-    <section>
-      <h2>Slide 1</h2>
-      <p>
-        ABC
-        $$
-        a_b
-        $$
-      </p>
-      <pre><code data-trim data-noescape>
-(def lazy-fib
-  (concat
-   [0 1]
-   ((fn rfib [a b]
-        (lazy-cons (+ a b) (rfib b (+ a b)))) 0 1)))
-  </code></pre>
-    </section>
-    <section>
-      <h2>Thanks</h2>
-      <blockquote>"There's no such thing as a stupid question!"</blockquote>
-      <p>
-        <small>Authors</small><br/>
-        <small><a href="">Links</a></small><br/>
-      </p>
-    </section>
-  </div>
-</div>
+    <div class="slides">
+        <!--        <section-->
+        <!--                data-background-image="https://images.fineartamerica.com/images-medium-large-5/a-police-officer-in-a-futuristic-smart-car-pulls-paul-noth.jpg"-->
+        <!--                data-background-size="contain"-->
+        <!--                data-background-color="white"-->
+        <!--                data-background-position="left"-->
+        <!--                data-transition="none"-->
+        <!--        >-->
+        <!--            <div-->
+        <!--                    style="text-align: right; margin-top: 25vh">-->
+        <!--                <h2 style="text-align: center; width: 25%; margin-left: auto; white-space: nowrap; font-size: unset; font-weight: bold">-->
+        <!--                    Explainable <br/>AI</h2>-->
+        <!--                <small style="text-align: center; width: 25%; margin-left: auto; font-size: 0.71em;">Kemal Erdem, Piotr-->
+        <!--                    Mazurek, Piotr Rarus</small>-->
 
+        <!--            </div>-->
+        <!--        </section>-->
+
+        <section class="center">
+            <h2>Normalizer-Free (Res)Nets</h2>
+            <small>Overview of: <a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image
+                Recognition Without Normalization</a>
+                <br>Brock et al. 2021
+            </small><br>
+            Piotr Mazurek
+        </section>
+
+        <section class="center">
+            <h2>Assumptions</h2>
+            <ul>
+                <li>You know how deep-learning (and back-prop) works</li>
+                <li>You understand the concept of ResNets</li>
+                <li>You know (basics of) PyTorch</li>
+                <li>You heard about Batch Normalization</li>
+            </ul>
+        </section>
+
+        <section class="center">
+            <h2>Agenda</h2>
+            <ul>
+                <li>Introduction</li>
+                <li>The problem with Batch Normalization</li>
+                <li>How to eliminate Batch Normalization</li>
+                <li>Gradient clipping - novel idea</li>
+                <li>View from an ML Engineer perspective</li>
+                <li>Discussion</li>
+            </ul>
+        </section>
+
+        <section class="center">
+            <span class="heading">Intuition</span>
+            <p class="display-row">
+                <img src="assets/nfnet-results.png" style="height: 60vh">
+
+                <img src="assets/meme.jpg" style="height: 60vh">
+            </p>
+        </section>
+
+        <section data-background-iframe="https://arxiv.org/pdf/2102.06171.pdf">
+        </section>
+
+
+        <section class="center">
+            <h2>Quick summary</h2>
+            <small>Extension of:
+                <a href="https://arxiv.org/pdf/2101.08692.pdf">
+                    Characterizing signal propagation to close the performance gap in unnormalized ResNets<br>
+                </a>Brock et al. 2021 ICLR 2021
+
+            </small><br><br>
+
+            <small>Novel idea - replace Batch Normalization with Gradient Clipping</small><br>
+
+            $G_{i}^{\ell} \rightarrow\left\{\begin{array}{ll}\lambda
+            \frac{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}{\left\|G_{i}^{\ell}\right\|_{F}} G_{i}^{\ell} & \text { if }
+            \frac{\left\|G_{i}^{\ell}\right\|_{F}}{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}>\lambda, \\ G_{i}^{\ell} &
+            \text { otherwise. }\end{array}\right.$<br><br>
+
+            <small>New normalizer-free network architecture</small>
+        </section>
+
+        <section class="center">
+            <h2>Batch Normalization (BN)</h2>
+            <h4>Quick recap</h4>
+
+            $ \mu_{\mathcal{B}} \leftarrow \frac{1}{m} \sum_{i=1}^{m} x_{i} (1)\\ $<br>
+
+            $ \sigma_{\mathcal{B}}^{2} \leftarrow \frac{1}{m} \sum_{i=1}^{m}\left(x_{i}-\mu_{\mathcal{B}}\right)^{2}
+            (2)\\ $<br>
+
+            $ \widehat{x}_{i} \leftarrow \frac{x_{i}-\mu_{\mathcal{B}}}{\sqrt{\sigma_{k}^{2}+\epsilon}} (3)\\ $<br>
+
+            $ y_{i} \leftarrow \gamma \widehat{x}_{i}+\beta \equiv \mathrm{BN}_{\gamma, \beta}\left(x_{i}\right) (4)
+            $<br>
+
+            <small class="caption"><a
+                    href="https://taiwanenglishnews.com/tesla-on-autopilot-crashes-into-overturned-truck/">Batch
+                Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift</a><br>Ioffe and
+                Szegedy 2015</small>
+        </section>
+
+        <section class="center">
+            <h2>Why is BN useful?</h2>
+            <p>1. BN downscales the residual branch</p>
+
+            <p>2. BN eliminates mean-shift</p>
+
+            <p>3. BN has a regularizing effect</p>
+
+            <p>4. BN allows efficient large-batch train-ing</p>
+
+            <small><a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image Recognition Without
+                Normalization</a>
+                <br>Brock et al. 2021
+            </small><br>
+        </section>
+
+        <section class="center">
+            <h2>BN downscales the residual branch</h2>
+            <p>After BN model is "biased" towards skip connection =>
+                <br>deeper networks can be trained</p>
+        </section>
+
+        <section class="center">
+            <h2>BN eliminates mean-shift</h2>
+            <img src="assets/mean-shift.png" style="height: 40vh"> <br>
+
+            <small>
+                <a
+                        href="https://taiwanenglishnews.com/tesla-on-autopilot-crashes-into-overturned-truck/">Batch
+                    How Does Batch Normalization Help Optimization?<br>
+                </a>
+                Santurkar et al. NIPS 18
+
+            </small>
+
+        </section>
+
+        <section class="center">
+            <h2>BN has a regularizing effect</h2>
+
+            <p>More diverse data-points => harder to overfit</p>
+
+        </section>
+
+        <section class="center">
+            <h2>BN allows efficient large-batch training</h2>
+
+            <p>BN smoothens the loss so bigger batches can be used</p>
+
+            <p>The bigger the batch size the larger stable lr</p>
+
+            <p>Bigger batch size => less "update steps" required</p>
+
+        </section>
+
+        <section class="center">
+            <h2>If it is so useful, why is BN a problem?</h2>
+        </section>
+
+        <section class="center">
+            <h2>BN is ridiculously slow to compute on a GPU</h2>
+
+            <img src="assets/bn-time-resnet50.png" style="height: 40vh"> <br>
+
+            <small><a href="https://arxiv.org/pdf/2101.08692.pdf">Comparison of Batch Normalization and Weight
+                Normalization Algorithms for the Large-scale Image Classification</a>
+                <br>Gitman, Ginsburg, 2017
+            </small><br>
+
+        </section>
+
+        <section class="center">
+            <h2>BN breaks the independence between training examples in the mini-batch</h2>
+
+            $ \widehat{x}_{i} \leftarrow \frac{x_{i}-\mu_{\mathcal{B}}}{\sqrt{\sigma_{k}^{2}+\epsilon}} (3)\\ $<br>
+        </section>
+
+
+        <section class="center">
+            <h2>Proposed solution</h2>
+
+            <p>Instead of doing costly BN</p>
+
+            <p>Let's "predict" the variance shift and shift data back</p>
+
+            <p>Then just scale the result by a right scalar</p>
+
+            <small>
+                Introduced in<br>
+                <a
+                        href="https://taiwanenglishnews.com/tesla-on-autopilot-crashes-into-overturned-truck/">Batch
+                    Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift<br>
+                </a>
+                Brock et al. 2021 ICLR 2021
+
+            </small>
+        </section>
+
+        <section class="center">
+            <h2>Variance shift correction</h2>
+
+            $h_{i+1}=h_{i}+\alpha f_{i}\left(h_{i} / \beta_{i}\right)$<br><br>
+
+            $\operatorname{Var}\left(f_{i}(z)\right)=\operatorname{Var}(z)$<br><br>
+
+            $h_{i}$: the inputs to the $i^{t h}$ residual block<br>
+
+            $f_{i}$: the function computed by the $i^{t h}$ residual branch<br>
+
+            $\alpha$: rate at which the variance increases after each residual
+            block<br>
+
+            $\beta_{i}=\sqrt{\operatorname{Var}\left(h_{i}\right)},$<br>
+
+            <p>In inference mode, independent from other examples in a batch</p>
+
+        </section>
+
+        <section class="center">
+            <h2>Intuition</h2>
+
+            $h_{i+1}=h_{i}+\alpha f_{i}\left(h_{i} / \beta_{i}\right)$<br><br>
+
+            <img src="assets/residual-block.jpeg" style="height: 40vh"> <br>
+        </section>
+
+
+        <section class="center">
+            <h3>Prevention of a mean shift<br> in the hidden activations</h3>
+            $$
+            \begin{array}{c}
+            \hat{W}_{i j}=\frac{W_{i j}-\mu_{i}}{\sqrt{N} \sigma_{i}} \\
+            \end{array}
+            \\
+            \\
+            \mu_{i}=(1 / N) \sum_{j} W_{i j}\\ \sigma_{i}^{2}=(1 / N) \sum_{j}\left(W_{i
+            j}-\mu_{i}\right)^{2}
+            $$
+            and $N$ denotes the fan-in (number of inputs to the hidden unit)
+        </section>
+
+        <section class="center">
+            <h2>NF ResNet</h2>
+
+            <img src="assets/nf-resnets-vs-efficientnet.png" style="height: 60vh">
+
+            <small>
+                <a href="https://arxiv.org/pdf/2101.08692.pdf">
+                    Characterizing signal propagation to close the performance gap in unnormalized ResNets<br>
+                </a>Brock et al. 2021 ICLR 2021
+            </small>
+
+        </section>
+
+        <section class="center">
+            <h2>Batch size scaling problem</h2>
+
+            <img src="assets/batch-scalling-probem.png" style="height: 40vh"> <br>
+
+            <small><a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image Recognition Without
+                Normalization</a>
+                <br>Brock et al. 2021
+            </small><br>
+
+        </section>
+
+        <section class="center">
+            <h2>Adaptive Gradient Clipping</h2>
+
+            $G \rightarrow\left\{\begin{array}{ll}\lambda \frac{G}{\|G\|} & \text { if }\|G\|>\lambda \\ G & \text {
+            otherwise }\end{array}\right.$
+            <br>
+            <small><a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image
+                Recognition Without Normalization</a>
+                <br>Brock et al. 2021</small><br><br>
+
+            $G_{i}^{\ell} \rightarrow\left\{\begin{array}{ll}\lambda
+            \frac{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}{\left\|G_{i}^{\ell}\right\|_{F}} G_{i}^{\ell} & \text { if }
+            \frac{\left\|G_{i}^{\ell}\right\|_{F}}{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}>\lambda, \\ G_{i}^{\ell} &
+            \text { otherwise. }\end{array}\right.$<br>
+            <small><a href="https://arxiv.org/abs/1211.5063">On the difficulty of training Recurrent Neural Networks</a>
+                <br>Pascanu et al. 2013</small><br><br>
+        </section>
+
+
+        <section class="center">
+            <h2>Clip only too big gradients</h2>
+            <img src="assets/vectors.png" style="height: 40vh"><br>
+            <small>grad_2 compared to weight is larger then $\lambda$</small>
+            <br>
+
+            $G_{i}^{\ell} \rightarrow\left\{\begin{array}{ll}\lambda
+            \frac{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}{\left\|G_{i}^{\ell}\right\|_{F}} G_{i}^{\ell} & \text { if }
+            \frac{\left\|G_{i}^{\ell}\right\|_{F}}{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}>\lambda, \\ G_{i}^{\ell} &
+            \text { otherwise. }\end{array}\right.$
+
+
+        </section>
+
+        <section class="center">
+            <h2>Adaptive Gradient Clipping in code</h2>
+            $G_{i}^{\ell} \rightarrow\left\{\begin{array}{ll}\lambda
+            \frac{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}{\left\|G_{i}^{\ell}\right\|_{F}} G_{i}^{\ell} & \text { if }
+            \frac{\left\|G_{i}^{\ell}\right\|_{F}}{\left\|W_{i}^{\ell}\right\|_{F}^{\star}*\lambda}>1, \\ G_{i}^{\ell} &
+            \text { otherwise. }\end{array}\right.$
+            <pre><code data-trim data-noescape class="python">
+def adaptive_clip_grad(parameters, clip_factor=0.01, eps=1e-3, norm_type=2.0):
+    for p in parameters:
+        p_data = p.detach()
+        g_data = p.grad.detach()
+        max_norm = unitwise_norm(p_data, norm_type=norm_type).clamp_(min=eps).mul_(clip_factor)
+        grad_norm = unitwise_norm(g_data, norm_type=norm_type)
+        clipped_grad = g_data * (max_norm / grad_norm.clamp(min=1e-6))
+        new_grads = torch.where(grad_norm < max_norm, g_data, clipped_grad)
+        p.grad.detach().copy_(new_grads)
+            </code></pre>
+            <small><a href="https://github.com/rwightman/pytorch-image-models/blob/master/timm/utils/agc.py">Implementation
+                in timm</a></small><br/>
+
+        </section>
+
+
+        <section class="center">
+            <h2>How is Adaptive Gradient Clipping useful?</h2>
+
+            <p>Gradient clipping prevents optimizer from too big jumps</p>
+
+            <p>Adaptive makes additional usege of gradient to parameter proportion</p>
+
+            <p>Less dependent on hyper-parameter $\lambda$?</p>
+
+            <p>Training is more smooth (no jumps due to a noise in data)</p>
+
+        </section>
+
+
+        <section class="center">
+            <h2>Last, but not least</h2>
+            <h4>Proposed architecture</h4>
+            <p>Start with: SE-ResNeXt-D</p>
+            <p>Add few tweaks</p>
+            <p>Overpriced TPU go brr</p>
+            <p>New SOTA on ImageNet</p>
+            <img src="assets/nf-net-modifications.png" style="height: 30vh"><br>
+
+        </section>
+
+        <section class="center">
+            <h2>Do they provide code?</h2>
+            <small>Yes, there is an official <a href="https://github.com/deepmind/deepmind-research/tree/master/nfnets">implementation</a>in
+                t̶e̶n̶s̶o̶r̶f̶l̶o̶w̶ jax</small><br>
+            <img src="assets/code-tf.png" style="height: 18vh"><br>
+            <small>For those, who have self-respect, there is an unofficial PyTorch <a
+                    href="https://github.com/rwightman/pytorch-image-models">implementation</a></small><br>
+            <img src="assets/code-torch.png" style="height: 40vh">
+        </section>
+
+        <section class="center">
+            <h2>How to use it?</h2>
+            <pre><code data-trim data-noescape class="python">
+import timm
+from utils import example_batch_of_images
+
+model = timm.create_model('dm_nfnet_f0', pretrained=True)
+model.eval()
+
+prediction = model(example_batch_of_images)
+prediction.size()
+>>> torch.Size(128, 1000)
+            </code></pre>
+        </section>
+
+
+        <section class="center">
+            <h2>How to train it?</h2>
+            <p>Exactly same approach as with Resnet/Efficientnet/Whatevernet</p>
+            <pre><code data-trim data-noescape class="python">
+class NFNetBasedfCustomClassifier(pl.LightningModule):
+    def __init__(self):
+        super().__init__()
+        self.criterion = nn.CrossEntropyLoss()
+        self.model = timm.create_model('dm_nfnet_f0', pretrained=True)
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self.forward(x)
+        loss = self.criterion(logits, y)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+
+        return [optimizer], [scheduler]
+            </code></pre>
+        </section>
+
+
+        <section class="center">
+            <h2>So far so good <br> Where is the catch?</h2>
+            <p class="display-row">
+                <img src="assets/nfnet-results.png" style="height: 50vh">
+
+                <img src="assets/efficientnet-results.png" style="height: 50vh"><br>
+
+
+                <small class="caption"><a href="https://arxiv.org/pdf/2101.08692.pdf">NFNet paper</a> vs
+                    <a href="https://arxiv.org/abs/1905.11946">Efficiennet
+                        paper</a><br> What is the difference?</small>
+            </p>
+
+        </section>
+
+        <section class="center">
+            <h2>Number of parameters increased</h2>
+
+            <p class="display-row">
+                <img src="assets/number-of-parameters.png" style="height: 65vh"><br>
+                <small class="caption">Despite far larger number of parameters, comparable times of a single full
+                    training step</small>
+            </p>
+
+        </section>
+
+        <section class="center">
+            <h2>Number of FLOPS increased</h2>
+
+            <p class="display-row">
+                <img src="assets/number-of-flops.png" style="height: 65vh"><br>
+                <small class="caption">Better results, more FLOPs, but similar times (is that comparison fair?)</small>
+            </p>
+
+        </section>
+
+
+        <section class="center">
+            <h2>I'm not into CV, why should I care? </h2>
+            <p>Ideas propagate from one domain to another</p>
+            <p>What works for CV is likely to work for other fields</p>
+        </section>
+
+        <section class="center">
+            <h2>Discussion</h2>
+
+            <p class="display-row">
+                <img src="assets/testo.gif" style="height: 30vh">
+            </p>
+
+            Even though we can benefit from new models<br>
+            It is far more useful for those with big resources
+
+        </section>
+
+        <section class="center">
+            <h2>Speculations</h2>
+            <p>If BN is not a limiting factor more parameters can be added making<br> future models even less useful for
+                "non-google" labs
+            </p>
+        </section>
+
+        <section class="center">
+            <h2>Predictions</h2>
+            <p>10.III.2021</p>
+
+            <ul>
+                <li>Google/Deepmind will do "EfficientNet-like" grid search for optimal architecture</li>
+                <br>
+
+                <li>The NF Net (or its efficient descendant) will be used as a backbone of a new SOTA object detection
+                    model
+                </li>
+                <br>
+
+                <li>The idea of Gradient Clipping will be successfully applied in transformer models,
+                    especially for CV (as they require far more resources)
+                </li>
+            </ul>
+
+        </section>
+
+        <section class="center">
+            <h2>TL;DR</h2>
+            <ul>
+                <li>NF Net = New ImageNet SOTA</li>
+                <li>Batch Normalization = slow operations</li>
+                <li>No BN layer = faster forward/backward pass</li>
+                <li>BN replaced with Gradient Clipping</li>
+                <li>(Probably) A new paradigm for<br> designing architectures</li>
+            </ul>
+        </section>
+
+        <section class="center">
+            <h2>Thanks</h2>
+            <blockquote>"There's no such thing as a stupid question!"</blockquote>
+            <p>
+                <small>Kemal Erdem, Piotr Mazurek, Piotr Rarus</small><br/>
+                <small>Presentation avalibe at: <a href="https://tugot17.github.io/XAI-Presentation/#/">https://tugot17.github.io/XAI-Presentation</a></small><br/>
+            </p>
+        </section>
+    </div>
+</div>
 
 
 <script src="dist/reveal.js"></script>
@@ -56,37 +533,39 @@
 <script src="plugin/highlight/highlight.js"></script>
 <script src="plugin/math/math.js"></script>
 <script>
-  // More info about config & dependencies:
-  // - https://github.com/hakimel/reveal.js#configuration
-  // - https://github.com/hakimel/reveal.js#dependencies
-  Reveal.initialize({
-    hash: true,
-    controls: true,
-    progress: true,
-    slideNumber: false,
-    overview: true,
-    center: true,
-    navigationMode: 'default',
-    fragmentInURL: false,
-    embedded: false,
-    preloadIframes: null,
-    autoSlide: 0,
-    autoSlideStoppable: true,
-    defaultTiming: 120,
-    mouseWheel: false,
-    previewLinks: false,
-    transition: 'slide', // none/fade/slide/convex/concave/zoom
-    transitionSpeed: 'default', // default/fast/slow
-    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
-    display: 'block',
-    math: {
-      mathjax: 'plugin/math/MathJax.js',
-      config: 'TeX-AMS_HTML-full', // See http://docs.mathjax.org/en/latest/config-files.html
-      // pass other options into `MathJax.Hub.Config()`
-      TeX: { Macros: { RR: "{\\bf R}" } }
-    },
-    plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath ]
-  });
+    // More info about config & dependencies:
+    // - https://github.com/hakimel/reveal.js#configuration
+    // - https://github.com/hakimel/reveal.js#dependencies
+    Reveal.initialize({
+        hash: true,
+        controls: true,
+        progress: true,
+        slideNumber: true,
+        overview: true,
+        center: false,
+        navigationMode: 'default',
+        fragmentInURL: false,
+        embedded: false,
+        preloadIframes: null,
+        autoSlide: 0,
+        autoSlideStoppable: true,
+        defaultTiming: 120,
+        mouseWheel: false,
+        previewLinks: false,
+        width: '100%',
+        height: '100%',
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+        transitionSpeed: 'fast', // default/fast/slow
+        backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+        display: 'block',
+        math: {
+            mathjax: 'plugin/math/MathJax.js',
+            config: 'TeX-AMS_HTML-full', // See http://docs.mathjax.org/en/latest/config-files.html
+            // pass other options into `MathJax.Hub.Config()`
+            TeX: {Macros: {RR: "{\\bf R}"}}
+        },
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath]
+    });
 </script>
 </body>
 </html>
