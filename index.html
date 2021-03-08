@@ -91,7 +91,7 @@
 
             </small><br><br>
 
-            <small>Novel idea - replace Batch Normalization with Gradient Clipping</small><br>
+            <small>Novel idea - replace Batch Normalization with Adaptive Gradient Clipping</small><br>
 
             $G_{i}^{\ell} \rightarrow\left\{\begin{array}{ll}\lambda
             \frac{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}{\left\|G_{i}^{\ell}\right\|_{F}} G_{i}^{\ell} & \text { if }
@@ -133,7 +133,7 @@
 
             <p>2. BN eliminates mean-shift</p>
 
-            <p>4. BN allows efficient large-batch train-ing</p>
+            <p>3. BN allows efficient large-batch training</p>
 
             <small><a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image Recognition Without
                 Normalization</a>
@@ -290,16 +290,18 @@
             $G \rightarrow\left\{\begin{array}{ll}\lambda \frac{G}{\|G\|} & \text { if }\|G\|>\lambda \\ G & \text {
             otherwise }\end{array}\right.$
             <br>
-            <small><a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image
-                Recognition Without Normalization</a>
-                <br>Brock et al. 2021</small><br><br>
+            <small><a href="https://arxiv.org/abs/1211.5063">On the difficulty of training Recurrent Neural Networks</a>
+                <br>Pascanu et al. 2013</small><br><br>
 
             $G_{i}^{\ell} \rightarrow\left\{\begin{array}{ll}\lambda
             \frac{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}{\left\|G_{i}^{\ell}\right\|_{F}} G_{i}^{\ell} & \text { if }
             \frac{\left\|G_{i}^{\ell}\right\|_{F}}{\left\|W_{i}^{\ell}\right\|_{F}^{\star}}>\lambda, \\ G_{i}^{\ell} &
             \text { otherwise. }\end{array}\right.$<br>
-            <small><a href="https://arxiv.org/abs/1211.5063">On the difficulty of training Recurrent Neural Networks</a>
-                <br>Pascanu et al. 2013</small><br><br>
+
+
+            <small><a href="https://arxiv.org/pdf/2101.08692.pdf">High-Performance Large-Scale Image
+                Recognition Without Normalization</a>
+                <br>Brock et al. 2021</small><br><br>
         </section>
 
 
@@ -487,7 +489,7 @@ class NFNetBasedfCustomClassifier(pl.LightningModule):
                 </li>
                 <br>
 
-                <li>The idea of Gradient Clipping will be successfully applied in transformer models,
+                <li>The idea of Adaptive Gradient Clipping will be successfully applied in transformer models,
                     especially for CV (as they require far more resources)
                 </li>
             </ul>
@@ -500,7 +502,7 @@ class NFNetBasedfCustomClassifier(pl.LightningModule):
                 <li>NF Net = New ImageNet SOTA</li>
                 <li>Batch Normalization = slow operations</li>
                 <li>No BN layer = faster forward/backward pass</li>
-                <li>BN replaced with Gradient Clipping</li>
+                <li>BN replaced with scaling and Adaptive Gradient Clipping</li>
                 <li>(Probably) A new paradigm for<br> designing architectures</li>
             </ul>
         </section>
@@ -510,7 +512,7 @@ class NFNetBasedfCustomClassifier(pl.LightningModule):
             <blockquote>Feel free to ask ANY question</blockquote>
             <p>
                 <small>Piotr Mazurek</small><br/>
-                <small>Presentation avalibe at: <a href="https://tugot17.github.io/NF-Nets-Presentation/">https://tugot17.github.io/XAI-Presentation</a></small><br/>
+                <small>Presentation avalibe at: <a href="https://tugot17.github.io/NF-Nets-Presentation/">https://tugot17.github.io/NF-Nets-Presentation</a></small><br/>
             </p>
         </section>
     </div>
