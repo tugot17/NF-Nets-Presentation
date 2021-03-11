@@ -12,6 +12,14 @@ Presentation avalible at: [tugot17.github.io/NF-Nets-Presentation](https://tugot
 
 <img src="assets/intuition.png"/>
 
+## Video Summary
+
+Video summary (unfortunately due to the course rules it is **in Polsih not in English**) avalible here:  
+
+[![Youtube video](assets/youtube.png)](https://youtu.be/BE1mVRKR-2k)
+
+
+
 ## TL;DR
 Normalizer-Free (NF) Net is a new class of deep neural network architectures that currently (March 2021) is considered to be a SOTA solution for image classification. Its biggest version - B6 achieves 86.5% top-1 and 97.9% top-5 accuracies on the ImagNet dataset. Smaller versions match the performance achieved by the previous SOTA network - Efficientnet while having considerably faster training step time. 
 
